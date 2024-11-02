@@ -1,0 +1,89 @@
+#cloud-config
+autoinstall:
+  version: 1
+  identity:
+    hostname: ubuntu-dualboot
+    username: gabrielhnunez
+    realname: Gabriel Nuñez
+    password: ENCRYPTED_HASH
+  locale: es_ES.UTF-8
+  keyboard:
+    layout: "us"
+    variant: ""
+  storage:
+    layout:
+      name: custom
+    swap:
+      size: 4096
+    config:
+      - type: disk
+        id: disk0
+        match:
+          size: largest
+        ptable: gpt
+        wipe: superblock
+        preserve: false
+        name: ''
+        grub_device: true
+        install: true
+      - type: partition
+        id: disk0-part1
+        size: 20480
+        device: disk0
+        flag: boot
+      - type: partition
+        id: disk0-part2
+        size: 102400
+        device: disk0
+      - type: partition
+        id: disk0-part3
+        size: -1
+        device: disk0
+      - type: format
+        fstype: ext4
+        volume: disk0-part1
+        label: system
+      - type: mount
+        path: /
+        device: disk0-part1
+      - type: format
+        fstype: ext4
+        volume: disk0-part2
+        label: home
+      - type: mount
+        path: /home
+        device: disk0-part2
+      - type: format
+        fstype: ext4
+        volume: disk0-part3
+        label: data
+      - type: mount
+        path: /mnt/data
+        device: disk0-part3
+  packages:
+    - zsh
+    - openssh-server
+    - flatpak
+    - libreoffice
+    - google-chrome-stable
+    - firefox
+    - docker.io
+    - docker-compose
+    - code
+    - git
+    - lazydocker
+    - remmina
+    - sshuttle
+    - trivy
+  user-data:
+    disable_root: false
+    chpasswd:
+      expire: false
+    ssh:
+      install-server: yes
+  late-commands:
+    - curtin in-target --target=/target -- bash -c "sh -c '\$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)'"
+    - curtin in-target --target=/target -- flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  snap:
+    commands:
+      - snap install google
